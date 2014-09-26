@@ -5,18 +5,29 @@ class Controller
     filename = validate_file(ARGV[0])
     deckname = filename.split(".").first
 
-    @cards = Model.get_cards(filename)
+    @deck = Deck.new(filename)
+    @active_card = @deck.active_card
+    @deck.mode = "main"
+    @review_i = 0
 
     puts
-    puts "Welcome to Ruby Flash Cards!"
-    puts "Deck: #{deckname}"
-    puts "To play, just enter the correct term for each definition. Type '.help' for other options."
+    puts "*" * 75
+    puts "*" + " " * 73 + "*"
+    puts "*" + " " * 73 + "*"
+    puts "*" + "WELCOME TO FLASHCARDS GORDON!".center(73, " ") + "*"
+    puts "*" + " " * 73 + "*"
+    puts "*" + " " * 73 + "*"
+    puts "*" * 75
+    puts
+    puts "To play, just guess the term. Type '.help' for other options."
     puts
     next_card
   end
 
   def validate_file(filename)
-    if filename.nil?
+    if filename == ".quit"
+      exit
+    elsif filename.nil?
       puts
       puts "Need to select file."
       print "> "
@@ -32,27 +43,34 @@ class Controller
   end
 
   def next_card
-    @active_card = @cards.sample
+    @active_card.hints = 0
+
+    if @deck.mode == "main"
+      @active_card = @deck.active_card
+    elsif @deck.mode == "review"
+      @active_card = @deck.review_card(@review_i)
+    end
 
     show_definition
-
-    get_user_input
   end
 
   def print_line
-    puts "-" * 50
+    puts "-" * 75
   end
 
   def show_definition
-    puts "DEFINITION"
+    print "DEFINITION || #{@deck.mode.upcase} MODE"
+    print " (#{@deck.review_cards.length - @review_i} REVIEW CARDS REMAINING)" if @deck.mode == "review"
+    puts
     print_line
     puts @active_card.definition
     puts
+    get_user_input
   end
 
   def show_answer
     print_line
-    puts "| ANSWER: #{@active_card.answer}".ljust(49, " ") + "|"
+    puts "| ANSWER: #{@active_card.answer}".ljust(74, " ") + "|"
     print_line
     puts
   end
@@ -63,24 +81,103 @@ class Controller
     input = $stdin.gets.chomp
 
     if input == ".quit"
-      puts
-      puts "Thanks for playing!"
-      exit
+      quit_command
     elsif input == ".skip"
-      puts
-      show_answer
-      next_card
+      skip_command
     elsif input == ".help"
-      puts
-      puts "type '.quit' to exit,   type '.skip' to skip card"
-      puts
-      user_continue
-      show_definition
-      get_user_input
+      help_command
+    elsif input == ".review" && @deck.mode == "main"
+      review_command
+    elsif input == ".main" && @deck.mode == "review"
+      puts "WARNING: All remaining review cards will be lost. Continue? (Y/N)"
+      print "> "
+      answer = confirm_choice
+      @deck.mode = "main" if answer.downcase == "y"
+      next_card
+    elsif input == ".hint"
+      hint_command
+    elsif input == ".add"
+      add_command
     else
       puts
       evaluate_guess(input)
     end
+  end
+
+  def confirm_choice
+    $stdin.gets.chomp
+  end
+
+  def quit_command
+    @deck.save
+    puts
+    puts "Deck saved."
+    puts
+    puts "Thanks for playing!"
+    exit
+  end
+
+  def skip_command
+    puts
+    show_answer
+    @review_i += 1 if @deck.mode == "review"
+    @deck.mode = "main" if @review_i > @deck.review_cards.length - 1
+    next_card
+  end
+
+  def help_command
+    puts
+    if @deck.mode == "main"
+      puts ".review    .hint    .skip    .add    .quit"
+    elsif @deck.mode == "review"
+      puts ".main    .hint    .skip    .add    .quit"
+    end
+    puts
+    user_continue
+    show_definition
+  end
+
+  def review_command
+    @deck.get_review_cards
+
+    if @deck.review_cards.empty?
+      puts
+      puts "No cards to review."
+      show_definition
+    else
+      @deck.mode = "review"
+      @review_i = 0
+      next_card
+    end
+  end
+
+  def hint_command
+    if @active_card.hints == @active_card.answer.length
+      puts
+      show_answer
+      next_card
+    else
+      puts
+      puts "HINT: #{@active_card.hint}"
+      puts
+      get_user_input
+    end
+  end
+
+  def add_command
+    puts
+    puts "Input definition:"
+    print "> "
+    definition = $stdin.gets.chomp
+
+    puts
+    puts "Input answer:"
+    print "> "
+    answer = $stdin.gets.chomp
+
+    @deck.add_card(definition, answer)
+
+    show_definition
   end
 
   def user_continue
@@ -93,13 +190,14 @@ class Controller
     if guess == @active_card.answer
       puts "Correct!"
       puts
+      @review_i += 1 if @deck.mode == "review"
+      @deck.mode = "main" if @review_i > @deck.review_cards.length - 1
       next_card
     else
       @active_card.attempts += 1
       puts "Incorrect! Try again."
       puts
       show_definition
-      get_user_input
     end
   end
 end
