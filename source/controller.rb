@@ -1,19 +1,8 @@
-# require_relative 'model'
-
-class Card
-  attr_reader :definition, :answer
-
-  def initialize(definition, answer)
-    @definition = definition
-    @answer = answer
-  end
-end
+require_relative 'model'
 
 class Controller
   def initialize
-    @cards = []
-    @cards << Card.new("To create a second name for the variable or method.", "alias")
-    @cards << Card.new("A command that appends two or more objects together.", "and")
+    @cards = Model.get_cards
 
     puts "Welcome to Ruby Flash Cards. To play, just enter the correct term for each definition. Type '.help' for other options."
     puts
