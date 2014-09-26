@@ -2,13 +2,12 @@ require_relative 'model'
 
 class Controller
   def initialize
-    filename = ARGV[0]
-
-    validate_file(filename)
-
+    filename = validate_file(ARGV[0])
     deckname = filename.split(".").first
+
     @cards = Model.get_cards(filename)
 
+    puts
     puts "Welcome to Ruby Flash Cards!"
     puts "Deck: #{deckname}"
     puts "To play, just enter the correct term for each definition. Type '.help' for other options."
@@ -16,8 +15,20 @@ class Controller
     next_card
   end
 
-  # TODO
-  def validate_file
+  def validate_file(filename)
+    if filename.nil?
+      puts
+      puts "Need to select file."
+      print "> "
+      validate_file($stdin.gets.chomp)
+    elsif File.exist?(filename)
+      filename
+    else
+      puts
+      puts "Invalid file."
+      print "> "
+      validate_file($stdin.gets.chomp)
+    end
   end
 
   def next_card
@@ -49,7 +60,7 @@ class Controller
   def get_user_input
     puts "Guess (type '.help' for other options): "
     print "> "
-    input = gets.chomp
+    input = $stdin.gets.chomp
 
     if input == ".quit"
       puts
@@ -74,7 +85,7 @@ class Controller
 
   def user_continue
     print "[Hit <enter> to continue]"
-    gets.chomp
+    $stdin.gets.chomp
     puts
   end
 
