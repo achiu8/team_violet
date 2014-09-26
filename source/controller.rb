@@ -3,6 +3,9 @@ require_relative 'model'
 class Controller
   def initialize
     filename = ARGV[0]
+
+    validate_file(filename)
+
     deckname = filename.split(".").first
     @cards = Model.get_cards(filename)
 
@@ -11,6 +14,10 @@ class Controller
     puts "To play, just enter the correct term for each definition. Type '.help' for other options."
     puts
     next_card
+  end
+
+  # TODO
+  def validate_file
   end
 
   def next_card
