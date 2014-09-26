@@ -2,11 +2,22 @@ require_relative 'model'
 
 class Controller
   def initialize
-    @cards = Model.get_cards
+    filename = ARGV[0]
 
-    puts "Welcome to Ruby Flash Cards. To play, just enter the correct term for each definition. Type '.help' for other options."
+    validate_file(filename)
+
+    deckname = filename.split(".").first
+    @cards = Model.get_cards(filename)
+
+    puts "Welcome to Ruby Flash Cards!"
+    puts "Deck: #{deckname}"
+    puts "To play, just enter the correct term for each definition. Type '.help' for other options."
     puts
     next_card
+  end
+
+  # TODO
+  def validate_file
   end
 
   def next_card
@@ -73,6 +84,7 @@ class Controller
       puts
       next_card
     else
+      @active_card.attempts += 1
       puts "Incorrect! Try again."
       puts
       show_definition
