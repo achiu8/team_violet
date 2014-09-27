@@ -20,7 +20,6 @@ class Controller
     puts "*" * 75
     puts
     puts "To play, just guess the term. Type '.help' for other options."
-    puts
     user_continue
     next_card
   end
