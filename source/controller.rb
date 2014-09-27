@@ -10,7 +10,7 @@ class Controller
     @deck.mode = "main"
     @review_i = 0
 
-    puts
+    puts "\e[H\e[2J"
     puts "*" * 75
     puts "*" + " " * 73 + "*"
     puts "*" + " " * 73 + "*"
@@ -21,6 +21,7 @@ class Controller
     puts
     puts "To play, just guess the term. Type '.help' for other options."
     puts
+    user_continue
     next_card
   end
 
@@ -58,13 +59,15 @@ class Controller
     puts "-" * 75
   end
 
-  def show_definition
+  def show_definition(hint = "")
+    puts "\e[H\e[2J"
     print "DEFINITION || #{@deck.mode.upcase} MODE"
     print " (#{@deck.review_cards.length - @review_i} REVIEW CARDS REMAINING)" if @deck.mode == "review"
     puts
     print_line
     puts @active_card.definition
     puts
+    puts hint
     get_user_input
   end
 
@@ -72,7 +75,7 @@ class Controller
     print_line
     puts "| ANSWER: #{@active_card.answer}".ljust(74, " ") + "|"
     print_line
-    puts
+    user_continue
   end
 
   def get_user_input
@@ -122,6 +125,7 @@ class Controller
     show_answer
     @review_i += 1 if @deck.mode == "review"
     @deck.mode = "main" if @review_i > @deck.review_cards.length - 1
+
     next_card
   end
 
@@ -132,7 +136,6 @@ class Controller
     elsif @deck.mode == "review"
       puts ".main    .hint    .skip    .add    .quit"
     end
-    puts
     user_continue
     show_definition
   end
@@ -143,6 +146,7 @@ class Controller
     if @deck.review_cards.empty?
       puts
       puts "No cards to review."
+      user_continue
       show_definition
     else
       @deck.mode = "review"
@@ -157,10 +161,7 @@ class Controller
       show_answer
       next_card
     else
-      puts
-      puts "HINT: #{@active_card.hint}"
-      puts
-      get_user_input
+      show_definition("HINT: #{@active_card.hint}")
     end
   end
 
@@ -181,6 +182,7 @@ class Controller
   end
 
   def user_continue
+    puts
     print "[Hit <enter> to continue]"
     $stdin.gets.chomp
     puts
