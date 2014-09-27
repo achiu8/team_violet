@@ -197,7 +197,7 @@ class Controller
     else
       @active_card.attempts += 1
       puts "Incorrect! Try again."
-      puts
+      user_continue
       show_definition
     end
   end
