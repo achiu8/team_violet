@@ -189,9 +189,9 @@ class Controller
   end
 
   def evaluate_guess(guess)
-    if guess == @active_card.answer
+    if guess.downcase == @active_card.answer.downcase
       puts "Correct!"
-      puts
+      user_continue
       @review_i += 1 if @deck.mode == "review"
       @deck.mode = "main" if @review_i > @deck.review_cards.length - 1
       next_card
